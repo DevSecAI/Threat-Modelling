@@ -1,46 +1,72 @@
 flowchart LR
-    subgraph u [" "]
-    user(user)
-    attack
-    mitigation
-    end
-    subgraph m [" "]
-    mobile((mobile\napplication))
-    attack2
-    end
-    subgraph p [" "]
-    proxy((reverse\nproxy))
-    end
-    subgraph a [" "]
+    %% Define classes for styling
+    classDef boundary fill:none,stroke:#333,stroke-dasharray: 5 5
+    classDef entity fill:#f9f,stroke:#333,stroke-width:1px
+    classDef attack fill:#ffcccc,stroke:#d33,stroke-width:2px
+    classDef mitigation fill:#ccffcc,stroke:#3c3,stroke-width:2px
+
+    %% External Entities
+    user[User]
+    attacker[Attacker]
+    class user,attacker entity
+
+    %% Application Components
+    mobileApp((Mobile App))
+    reverseProxy((Reverse Proxy))
+    webApp((Web Application))
     api((API))
-    end
-    subgraph d[" "]
-    db[|borders:tb|database]
-    attack3
+    database[(Database)]
+    class mobileApp,reverseProxy,webApp,api,database entity
+
+    %% Attack Vectors
+    attack1>Phishing Attack]
+    attack2>SQL Injection]
+    attack3>Denial of Service]
+    class attack1,attack2,attack3 attack
+
+    %% Mitigations
+    mitigation1[2FA]
+    mitigation2[Input Validation]
+    mitigation3[Rate Limiting]
+    class mitigation1,mitigation2,mitigation3 mitigation
+
+    %% Data Flows
+    user -->|Uses| mobileApp
+    mobileApp -->|Sends Requests| reverseProxy
+    reverseProxy -->|Forwards Requests| webApp
+    webApp -->|API Calls| api
+    api -->|Queries| database
+    database -->|Returns Data| api
+    api -->|Responds| webApp
+    webApp -->|Sends Response| reverseProxy
+    reverseProxy -->|Delivers Response| mobileApp
+
+    %% Attack Paths
+    attacker -->|Phishing| user
+    attacker -->|SQL Injection| webApp
+    attacker -->|DoS| reverseProxy
+
+    %% Mitigation Links
+    mitigation1 -->|Protects| user
+    mitigation2 -->|Secures| webApp
+    mitigation3 -->|Shields| reverseProxy
+
+    %% Security Boundaries
+    subgraph Internet
+        user
+        attacker
+        mobileApp
     end
 
-    subgraph external [Internet]
-        u
-        m
-        p
-        user--personal data-->mobile
-        mobile-->proxy
-    end
-    subgraph dmz [Internal Network]
-        p
-        a
-        d
-        proxy-->api
-        db-->api
-        api-->db
+    subgraph DMZ
+        reverseProxy
+        webApp
     end
 
-    classDef boundary fill:none,stroke-dasharray: 5 5
-    classDef entity fill:none,stroke: none
-    dmz:::boundary
-    external:::boundary
-    u:::entity
-    m:::entity
-    p:::entity
-    a:::entity
-    d:::entity
+    subgraph Internal
+        api
+        database
+    end
+
+    %% Apply boundary styles
+    class Internet,DMZ,Internal boundary
